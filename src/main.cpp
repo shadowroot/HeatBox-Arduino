@@ -94,7 +94,9 @@ void setup(void)
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
 }
-
+/*
+  * Reading Temperature
+  */
 uint8_t readTemp(DeviceAddress deviceAddress){
   current_temp = sensors.getTempC(deviceAddress);
   if(current_temp == DEVICE_DISCONNECTED_C) 
