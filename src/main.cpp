@@ -38,7 +38,7 @@
 
 #define LED_PIN 13 //Currently builtin LED
 //Watchdog number of tries, after that signal malfunction
-#define WATCHDOG_TRIES 60 //60 seconds
+#define WATCHDOG_TRIES 180 //180 seconds
 
 
 #define ERROR_FLASH_DELAY 100
