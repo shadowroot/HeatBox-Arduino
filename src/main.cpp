@@ -14,6 +14,11 @@
  * - 2 flashes - too cold for a long time - heater is not working propperly
  * - 3 flashes - too hot for a long time - cooling is not working propperly
  * 
+ * 433mHz proposal
+ * Prefered:
+ * https://github.com/PaulStoffregen/RadioHead.git
+ * Alternatives:
+ * https://github.com/pouriap/TinyRF.git
  * 
  * It would be better to use relays with optocoupler.
  * Single Dallas sensor is currently used for this.
@@ -80,7 +85,7 @@ void printAddress(DeviceAddress deviceAddress)
 /*
 Flashes error 
 */
-void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=100){
+void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=ERROR_FLASH_DELAY){
   for(int i=0; i < times; i++){
     digitalWrite(pin, true);
     delay(_delay);
