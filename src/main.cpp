@@ -8,6 +8,12 @@
  * 
  * @brief 
  * Inspired by sketch https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/master/examples/Single/Single.ino.
+ *
+ *  Led flashes:
+ * - LED flashes 10 times, when reading of the temperature failed
+ * - 2 flashes - too cold for a long time - heater is not working propperly
+ * - 3 flashes - too hot for a long time - cooling is not working propperly
+ * 
  * 
  * It would be better to use relays with optocoupler.
  * Single Dallas sensor is currently used for this.
@@ -25,13 +31,28 @@
 //Update interval
 #define SLEEP_INTERVAL 1000
 
+#define LED_PIN 13 //Currently builtin LED
+//Watchdog number of tries, after that signal malfunction
+#define WATCHDOG_TRIES 60 //60 seconds
+
+
+#define ERROR_FLASH_DELAY 100
+#define HEATER_FAIL_FLASHES 2
+#define COOLER_FAIL_FLASHES 3
+//LED flashes 10 times, when reading of the temperature failed. 
+#define TEMP_READ_FAIL_FLASHES 10
+
 //Target temperature in degrees Celsius
 float TARGET_TEMP = 26.0f;
 //Temperature deviation in degrees Celsius, when fan or heater are not adjusting internal temperature
 float TEMP_DEV = 2.0f;
 //Current temperature
 float current_temp = 0.0f;
+
+//Watchdog
 float prev_temp = 0.0f;
+int prev_counts = WATCHDOG_TRIES;
+
 bool temp_read_failed = false;
 bool heater_on = false;
 bool fan_on = false;
@@ -56,6 +77,57 @@ void printAddress(DeviceAddress deviceAddress)
   }
 }
 
+/*
+Flashes error 
+*/
+void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=100){
+  for(int i=0; i < times; i++){
+    digitalWrite(pin, true);
+    delay(_delay);
+    digitalWrite(pin, false);
+    delay(_delay);
+  }
+}
+
+void sleep_time(long delay_ms){
+  if(delay_ms > 0){
+    delay(delay_ms);
+  }
+}
+
+/**
+ * @brief Health watchdog check if LED is present
+ * 2 flashes too cold
+ * 3 flashes over heat
+ */
+void temp_watchdog(){
+  float tmp_diff = current_temp - TARGET_TEMP;
+  if(abs(tmp_diff) > TEMP_DEV){
+    //temp is not ok
+    if(prev_counts <= 0){
+      if(current_temp < 0){
+        //Heater 
+        Serial.println("TEMP WATCHDOG: HEATER FAIL");
+        flash_error(LED_PIN, HEATER_FAIL_FLASHES, ERROR_FLASH_DELAY);
+        sleep_time(SLEEP_INTERVAL - (HEATER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
+      }
+      else{
+        //Cooler 
+        Serial.println("TEMP WATCHDOG: COOLER FAIL");
+        flash_error(LED_PIN, COOLER_FAIL_FLASHES, ERROR_FLASH_DELAY);
+        sleep_time(SLEEP_INTERVAL - (COOLER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
+      }
+    }
+    else{
+      prev_counts--;
+    }
+  }
+  else{
+    Serial.println("TEMP WATCHDOG: OK");
+    prev_counts = WATCHDOG_TRIES;
+    sleep_time(SLEEP_INTERVAL);
+  }
+}
 
 /*
  * Setup function. Here we do the basics
@@ -98,6 +170,7 @@ void setup(void)
   * Reading Temperature
   */
 uint8_t readTemp(DeviceAddress deviceAddress){
+  float tmp = current_temp;
   current_temp = sensors.getTempC(deviceAddress);
   if(current_temp == DEVICE_DISCONNECTED_C) 
   {
@@ -105,6 +178,7 @@ uint8_t readTemp(DeviceAddress deviceAddress){
     temp_read_failed = true;
     return 1;
   }
+  prev_temp = tmp;
   temp_read_failed = false;
   return 0;
 }
@@ -150,18 +224,6 @@ void turn_fan_on(){
   Serial.println("FAN_ON: State unchanged");
 }
 
-/*
-Flashes error 
-*/
-void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=100){
-  for(int i=0; i < times; i++){
-    digitalWrite(pin, true);
-    delay(_delay);
-    digitalWrite(pin, false);
-    delay(_delay);
-  }
-}
-
 
 /*
  * 
@@ -202,9 +264,8 @@ void loop(void)
   }
   else{
     Serial.println("Temp Failed!!");
-    //LED flashes 10 times, when reading of the temperature failed. 
-    flash_error(LED_BUILTIN, 10);
+    flash_error(LED_PIN, TEMP_READ_FAIL_FLASHES);
   }
-  delay(SLEEP_INTERVAL);
+  temp_watchdog();
 }
 
