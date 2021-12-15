@@ -32,7 +32,7 @@
 #define COOLER_SEPARE 1
 // Data wire is plugged into port 2 on the Arduino
 #define HEATER_PIN 2 //D2
-#define COOLER_PIN 3 //D3
+#define FAN_PIN 3 //D3
 //Pin for oneWire.
 #define ONE_WIRE_BUS 4 //D4
 //Update interval
@@ -176,7 +176,7 @@ void setup(void)
   Serial.print(sensors.getResolution(insideThermometer), DEC); 
   Serial.println();
 
-  pinMode(COOLER_PIN, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
 }
 /*
@@ -202,7 +202,7 @@ void stall_temp(){
     return;
   }
   digitalWrite(HEATER_PIN, false);
-  digitalWrite(COOLER_PIN, false);
+  digitalWrite(FAN_PIN, false);
 
   heater_on = false;
   fan_on = false;
@@ -212,10 +212,10 @@ void stall_temp(){
 void turn_heater_on(){
   if(!heater_on){
     #ifdef COOLER_SEPARE
-      digitalWrite(COOLER_PIN, false);
+      digitalWrite(FAN_PIN, false);
       fan_on = false;
     #else
-      digitalWrite(COOLER_PIN, true);
+      digitalWrite(FAN_PIN, true);
       fan_on = true;
     #endif
     digitalWrite(HEATER_PIN, true);
@@ -233,7 +233,7 @@ void turn_heater_on(){
 void turn_cooler_on(){
   if(!fan_on){
     digitalWrite(HEATER_PIN, false);
-    digitalWrite(COOLER_PIN, true);
+    digitalWrite(FAN_PIN, true);
 
     heater_on = false;
     fan_on = true;
