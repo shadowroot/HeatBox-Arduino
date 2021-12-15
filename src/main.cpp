@@ -27,7 +27,9 @@
  * 
  * TODO: Serial communication with ESP8266/ESP32 as daughterboard for ESPHOME - Homeassistant integration.
  */
-
+//if defined, cooler and heater are separate.
+//Together could be fan and heater, so you could run just one of them or on heater pin is just heater.
+#define COOLER_SEPARE 1
 // Data wire is plugged into port 2 on the Arduino
 #define HEATER_PIN 2 //D2
 #define COOLER_PIN 3 //D3
@@ -209,8 +211,12 @@ void stall_temp(){
 
 void turn_heater_on(){
   if(!heater_on){
+    #ifdef COOLER_SEPARE
+      digitalWrite(COOLER_PIN, false);
+    #else
+      digitalWrite(COOLER_PIN, true);
+    #endif
     digitalWrite(HEATER_PIN, true);
-    digitalWrite(COOLER_PIN, false);
 
     heater_on = true;
     fan_on = false;
