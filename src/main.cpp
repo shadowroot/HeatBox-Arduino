@@ -41,7 +41,7 @@
 #define WATCHDOG_TRIES 60 //180 * sleep interval seconds
 
 
-#define ERROR_FLASH_DELAY 100
+#define ERROR_FLASH_DELAY 200
 #define HEATER_FAIL_FLASHES 2
 #define COOLER_FAIL_FLASHES 3
 //LED flashes 10 times, when reading of the temperature failed. 
@@ -113,28 +113,29 @@ void temp_watchdog(){
   if(abs(tmp_diff) > TEMP_DEV){
     //temp is not ok
     if(prev_counts <= 0){
-      if(current_temp < 0){
+      if(tmp_diff < 0){
         //Heater 
-        Serial.println("TEMP WATCHDOG: HEATER FAIL");
+        Serial.println("TEMP_WATCHDOG: HEATER_FAIL");
         flash_error(LED_PIN, HEATER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (HEATER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
         return;
       }
       else{
         //Cooler 
-        Serial.println("TEMP WATCHDOG: COOLER FAIL");
+        Serial.println("TEMP_WATCHDOG: COOLER_FAIL");
         flash_error(LED_PIN, COOLER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (COOLER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
         return;
       }
     }
     else{
+      Serial.println("TEMP_WATCHDOG: WAITING_FOR_CHANGE");
       prev_counts--;
       sleep_time(SLEEP_INTERVAL);
       return;
     }
   }
-  Serial.println("TEMP WATCHDOG: OK");
+  Serial.println("TEMP_WATCHDOG: OK");
   prev_counts = WATCHDOG_TRIES;
   sleep_time(SLEEP_INTERVAL);
 }
