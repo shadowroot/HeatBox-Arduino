@@ -41,7 +41,7 @@
 #define WATCHDOG_TRIES 60 //180 * sleep interval seconds
 
 
-#define ERROR_FLASH_DELAY 200
+#define ERROR_FLASH_DELAY 300
 #define HEATER_FAIL_FLASHES 2
 #define COOLER_FAIL_FLASHES 3
 //LED flashes 10 times, when reading of the temperature failed. 
