@@ -213,13 +213,15 @@ void turn_heater_on(){
   if(!heater_on){
     #ifdef COOLER_SEPARE
       digitalWrite(COOLER_PIN, false);
+      fan_on = false;
     #else
       digitalWrite(COOLER_PIN, true);
+      fan_on = true;
     #endif
     digitalWrite(HEATER_PIN, true);
 
     heater_on = true;
-    fan_on = false;
+    
     Serial.println("HEATER_TURN_ON: HEATER=ON, COOLER=OFF");
     return;
   }
