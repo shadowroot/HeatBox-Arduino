@@ -38,7 +38,7 @@
 
 #define LED_PIN 13 //Currently builtin LED
 //Watchdog number of tries, after that signal malfunction
-#define WATCHDOG_TRIES 180 //180 seconds
+#define WATCHDOG_TRIES 60 //180 * sleep interval seconds
 
 
 #define ERROR_FLASH_DELAY 100
@@ -96,6 +96,9 @@ void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=ERROR_FLASH_DELAY){
 
 void sleep_time(long delay_ms){
   if(delay_ms > 0){
+    Serial.print("Sleeping ");
+    Serial.print(delay_ms);
+    Serial.println("ms");
     delay(delay_ms);
   }
 }
@@ -115,23 +118,25 @@ void temp_watchdog(){
         Serial.println("TEMP WATCHDOG: HEATER FAIL");
         flash_error(LED_PIN, HEATER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (HEATER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
+        return;
       }
       else{
         //Cooler 
         Serial.println("TEMP WATCHDOG: COOLER FAIL");
         flash_error(LED_PIN, COOLER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (COOLER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
+        return;
       }
     }
     else{
       prev_counts--;
+      sleep_time(SLEEP_INTERVAL);
+      return;
     }
   }
-  else{
-    Serial.println("TEMP WATCHDOG: OK");
-    prev_counts = WATCHDOG_TRIES;
-    sleep_time(SLEEP_INTERVAL);
-  }
+  Serial.println("TEMP WATCHDOG: OK");
+  prev_counts = WATCHDOG_TRIES;
+  sleep_time(SLEEP_INTERVAL);
 }
 
 /*
