@@ -30,7 +30,7 @@
 
 // Data wire is plugged into port 2 on the Arduino
 #define HEATER_PIN 2 //D2
-#define FAN_PIN 3 //D3
+#define COOLER_PIN 3 //D3
 //Pin for oneWire.
 #define ONE_WIRE_BUS 4 //D4
 //Update interval
@@ -96,7 +96,7 @@ void flash_error(uint8_t pin, uint8_t times, uint32_t _delay=ERROR_FLASH_DELAY){
 
 void sleep_time(long delay_ms){
   if(delay_ms > 0){
-    Serial.print("Sleeping ");
+    Serial.print("SLEEPING: ");
     Serial.print(delay_ms);
     Serial.println("ms");
     delay(delay_ms);
@@ -174,7 +174,7 @@ void setup(void)
   Serial.print(sensors.getResolution(insideThermometer), DEC); 
   Serial.println();
 
-  pinMode(FAN_PIN, OUTPUT);
+  pinMode(COOLER_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
 }
 /*
@@ -185,7 +185,7 @@ uint8_t readTemp(DeviceAddress deviceAddress){
   current_temp = sensors.getTempC(deviceAddress);
   if(current_temp == DEVICE_DISCONNECTED_C) 
   {
-    Serial.println("Error: Could not read temperature data");
+    Serial.println("TEMP_ERROR: Could not read temperature data");
     temp_read_failed = true;
     return 1;
   }
@@ -196,43 +196,43 @@ uint8_t readTemp(DeviceAddress deviceAddress){
 
 void stall_temp(){
   if(!fan_on && !heater_on){
-    Serial.println("STALE_TEMP: State unchanged");
+    Serial.println("STALE_TEMP: STATE_UNCHANGED");
     return;
   }
   digitalWrite(HEATER_PIN, false);
-  digitalWrite(FAN_PIN, false);
+  digitalWrite(COOLER_PIN, false);
 
   heater_on = false;
   fan_on = false;
-  Serial.println("STALE_TEMP: fan=off, heater=off");
+  Serial.println("STALE_TEMP: COOLER=OFF, HEATER=OFF");
 }
 
 void turn_heater_on(){
   if(!heater_on){
     digitalWrite(HEATER_PIN, true);
-    digitalWrite(FAN_PIN, false);
+    digitalWrite(COOLER_PIN, false);
 
     heater_on = true;
     fan_on = false;
-    Serial.println("Turning heater=on, fan=off");
+    Serial.println("HEATER_TURN_ON: HEATER=ON, COOLER=OFF");
     return;
   }
-  Serial.println("HEATER_ON: State unchanged");
+  Serial.println("HEATER_ON: STATE_UNCHANGED");
 }
 /*
  * Turn fan on
  */
-void turn_fan_on(){
+void turn_cooler_on(){
   if(!fan_on){
     digitalWrite(HEATER_PIN, false);
-    digitalWrite(FAN_PIN, true);
+    digitalWrite(COOLER_PIN, true);
 
     heater_on = false;
     fan_on = true;
-    Serial.println("Turning fan=on, heater=off");
+    Serial.println("COOLER_TURN_ON: COOLER=ON, HEATER=OFF");
     return;
   }
-  Serial.println("FAN_ON: State unchanged");
+  Serial.println("COOLER_ON: STATE_UNCHANGED");
 }
 
 
@@ -243,12 +243,12 @@ void loop(void)
 { 
   // call sensors.requestTemperatures() to issue a global temperature 
   // request to all devices on the bus
-  Serial.print("Requesting temperatures...");
+  Serial.print("TEMP_I: Requesting temperatures...");
   sensors.requestTemperatures(); // Send the command to get temperatures
   Serial.println("DONE");
   //reading DS temp temperature
   if(readTemp(insideThermometer) == 0){
-    Serial.print("Temp : ");
+    Serial.print("TEMP: ");
     Serial.print(current_temp);
     Serial.println("C");
     //continue adjusting if needed
@@ -263,7 +263,7 @@ void loop(void)
     }
     else if(diff > 0.0f){
       if(diff > TEMP_DEV){
-        turn_fan_on();
+        turn_cooler_on();
       }
       else{
         stall_temp();
@@ -274,7 +274,7 @@ void loop(void)
     }
   }
   else{
-    Serial.println("Temp Failed!!");
+    Serial.println("TEMP_ERROR: Failed!!");
     flash_error(LED_PIN, TEMP_READ_FAIL_FLASHES);
   }
   temp_watchdog();
