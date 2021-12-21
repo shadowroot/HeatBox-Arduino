@@ -29,7 +29,7 @@
  */
 //if defined, cooler and heater are separate.
 //Together could be fan and heater, so you could run just one of them or on heater pin is just heater.
-#define COOLER_SEPARE 1
+//#define COOLER_SEPARE 1
 // Data wire is plugged into port 2 on the Arduino
 #define HEATER_PIN 2 //D2
 #define FAN_PIN 3 //D3
