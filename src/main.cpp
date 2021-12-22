@@ -1,7 +1,8 @@
-#include <Arduino.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include "conf.h"
 
+#ifdef DISPLAY_I2C
+#include <LiquidCrystal_I2C.h>
+#endif
 /**
  * Adjust temperature of 3D printer in the box, using fan and heater.
  * Fan and heater are enabled by relay.
@@ -64,6 +65,11 @@ bool temp_read_failed = false;
 bool heater_on = false;
 bool fan_on = false;
 
+#ifdef DISPLAY_I2C
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+#endif
+
+const char * TEMP_ERR_STR = "TEMP_ERROR: Failed!!";
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
@@ -105,6 +111,80 @@ void sleep_time(long delay_ms){
   }
 }
 
+
+uint8_t readTemp(DeviceAddress deviceAddress){
+  float tmp = current_temp;
+  current_temp = sensors.getTempC(deviceAddress);
+  if(current_temp == DEVICE_DISCONNECTED_C) 
+  {
+    Serial.println("TEMP_ERROR: Could not read temperature data");
+    temp_read_failed = true;
+    return 1;
+  }
+  prev_temp = tmp;
+  temp_read_failed = false;
+  return 0;
+}
+
+void stall_temp(){
+  if(!fan_on && !heater_on){
+    Serial.println("STALE_TEMP: STATE_UNCHANGED");
+    return;
+  }
+  digitalWrite(HEATER_PIN, false);
+  digitalWrite(FAN_PIN, false);
+
+  heater_on = false;
+  fan_on = false;
+  Serial.println("STALE_TEMP: FAN=OFF, HEATER=OFF");
+  #ifdef DISPLAY_I2C
+    lcd.setCursor(0,1);
+    lcd.print("STALE_TEMP");
+  #endif
+}
+
+void turn_heater_on(){
+  if(!heater_on){
+    #ifdef COOLER_SEPARE
+      digitalWrite(FAN_PIN, false);
+      fan_on = false;
+      Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=OFF");
+    #else
+      digitalWrite(FAN_PIN, true);
+      fan_on = true;
+      Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=ON");
+    #endif
+    digitalWrite(HEATER_PIN, true);
+    heater_on = true;
+    #ifdef DISPLAY_I2C
+      lcd.setCursor(0,1);
+      lcd.print("HEATING!!");
+    #endif
+    return;
+  }
+  Serial.println("HEATER_ON: STATE_UNCHANGED");
+}
+/*
+ * Turn fan on
+ */
+void turn_cooler_on(){
+  if(!fan_on){
+    digitalWrite(HEATER_PIN, false);
+    digitalWrite(FAN_PIN, true);
+
+    heater_on = false;
+    fan_on = true;
+    Serial.println("FAN_TURN_ON: FAN=ON, HEATER=OFF");
+    #ifdef DISPLAY_I2C
+      lcd.setCursor(0,1);
+      lcd.print("COOLING!!");
+    #endif
+    return;
+  }
+  Serial.println("FAN_ON: STATE_UNCHANGED");
+}
+
+
 /**
  * @brief Health watchdog check if LED is present
  * 2 flashes too cold
@@ -118,6 +198,10 @@ void temp_watchdog(){
       if(tmp_diff < 0){
         //Heater 
         Serial.println("TEMP_WATCHDOG: HEATER_FAIL");
+        #ifdef DISPLAY_I2C
+          lcd.setCursor(0,1);
+          lcd.print("HEATER_FAIL");
+        #endif
         flash_error(LED_PIN, HEATER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (HEATER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
         return;
@@ -125,6 +209,10 @@ void temp_watchdog(){
       else{
         //Cooler 
         Serial.println("TEMP_WATCHDOG: COOLER_FAIL");
+        #ifdef DISPLAY_I2C
+          lcd.setCursor(0,1);
+          lcd.print("COOLER_FAIL");
+        #endif
         flash_error(LED_PIN, COOLER_FAIL_FLASHES, ERROR_FLASH_DELAY);
         sleep_time(SLEEP_INTERVAL - (COOLER_FAIL_FLASHES * ERROR_FLASH_DELAY * 2));
         return;
@@ -145,9 +233,7 @@ void temp_watchdog(){
 /*
  * Setup function. Here we do the basics
  */
-void setup(void)
-{
-  // start serial port
+void setup(){
   Serial.begin(9600);
 
   // locate devices on the bus
@@ -178,69 +264,13 @@ void setup(void)
 
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
-}
-/*
-  * Reading Temperature
-  */
-uint8_t readTemp(DeviceAddress deviceAddress){
-  float tmp = current_temp;
-  current_temp = sensors.getTempC(deviceAddress);
-  if(current_temp == DEVICE_DISCONNECTED_C) 
-  {
-    Serial.println("TEMP_ERROR: Could not read temperature data");
-    temp_read_failed = true;
-    return 1;
-  }
-  prev_temp = tmp;
-  temp_read_failed = false;
-  return 0;
-}
 
-void stall_temp(){
-  if(!fan_on && !heater_on){
-    Serial.println("STALE_TEMP: STATE_UNCHANGED");
-    return;
-  }
-  digitalWrite(HEATER_PIN, false);
-  digitalWrite(FAN_PIN, false);
+  #ifdef DISPLAY_I2C
+  lcd.init();                      // initialize the lcd 
+  // Print a message to the LCD.
+  lcd.backlight();
+  #endif
 
-  heater_on = false;
-  fan_on = false;
-  Serial.println("STALE_TEMP: COOLER=OFF, HEATER=OFF");
-}
-
-void turn_heater_on(){
-  if(!heater_on){
-    #ifdef COOLER_SEPARE
-      digitalWrite(FAN_PIN, false);
-      fan_on = false;
-    #else
-      digitalWrite(FAN_PIN, true);
-      fan_on = true;
-    #endif
-    digitalWrite(HEATER_PIN, true);
-
-    heater_on = true;
-    
-    Serial.println("HEATER_TURN_ON: HEATER=ON, COOLER=OFF");
-    return;
-  }
-  Serial.println("HEATER_ON: STATE_UNCHANGED");
-}
-/*
- * Turn fan on
- */
-void turn_cooler_on(){
-  if(!fan_on){
-    digitalWrite(HEATER_PIN, false);
-    digitalWrite(FAN_PIN, true);
-
-    heater_on = false;
-    fan_on = true;
-    Serial.println("COOLER_TURN_ON: COOLER=ON, HEATER=OFF");
-    return;
-  }
-  Serial.println("COOLER_ON: STATE_UNCHANGED");
 }
 
 
@@ -259,6 +289,16 @@ void loop(void)
     Serial.print("TEMP: ");
     Serial.print(current_temp);
     Serial.println("C");
+    
+    #ifdef DISPLAY_I2C
+      lcd.setCursor(0,0);
+      lcd.print("TEMP");
+      char outstr[4];
+      dtostrf(current_temp, 4, 1, outstr);
+      lcd.print(outstr);
+      lcd.print("C");
+    #endif
+
     //continue adjusting if needed
     float diff = current_temp - TARGET_TEMP;
     if(diff < 0.0f){
@@ -282,9 +322,17 @@ void loop(void)
     }
   }
   else{
-    Serial.println("TEMP_ERROR: Failed!!");
+    Serial.println(TEMP_ERR_STR);
+    #ifdef DISPLAY_I2C
+      lcd.setCursor(0,1);
+      lcd.print(TEMP_ERR_STR);
+    #endif
     flash_error(LED_PIN, TEMP_READ_FAIL_FLASHES);
   }
+  
   temp_watchdog();
+  #ifdef DISPLAY_I2C
+    lcd.clear();
+  #endif
 }
 
