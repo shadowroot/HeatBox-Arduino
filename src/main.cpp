@@ -233,7 +233,9 @@ void temp_watchdog(){
 /*
  * Setup function. Here we do the basics
  */
-void setup(){
+void setup(void)
+{
+  // start serial port
   Serial.begin(9600);
 
   // locate devices on the bus
