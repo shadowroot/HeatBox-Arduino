@@ -1,8 +1,5 @@
 #include "conf.h"
 
-#ifdef DISPLAY_I2C
-#include <LiquidCrystal_I2C.h>
-#endif
 /**
  * Adjust temperature of 3D printer in the box, using fan and heater.
  * Fan and heater are enabled by relay.

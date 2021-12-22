@@ -11,3 +11,7 @@
 // Arduino Leonardo	2	3
 // Arduino Due	20	21
 #define DISPLAY_I2C true
+
+#ifdef DISPLAY_I2C
+    #include <LiquidCrystal_I2C.h>
+#endif
