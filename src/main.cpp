@@ -63,7 +63,7 @@ bool heater_on = false;
 bool fan_on = false;
 
 #ifdef DISPLAY_I2C
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 #endif
 
 const char * TEMP_ERR_STR = "TEMP_ERROR: Failed!!";
@@ -291,7 +291,7 @@ void loop(void)
     
     #ifdef DISPLAY_I2C
       lcd.setCursor(0,0);
-      lcd.print("TEMP");
+      lcd.print("TEMP ");
       char outstr[4];
       dtostrf(current_temp, 4, 1, outstr);
       lcd.print(outstr);
@@ -331,7 +331,7 @@ void loop(void)
   
   temp_watchdog();
   #ifdef DISPLAY_I2C
-    lcd.clear();
+    //lcd.clear();
   #endif
 }
 
