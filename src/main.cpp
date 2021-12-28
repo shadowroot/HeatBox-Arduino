@@ -25,32 +25,7 @@
  * 
  * TODO: Serial communication with ESP8266/ESP32 as daughterboard for ESPHOME - Homeassistant integration.
  */
-//if defined, cooler and heater are separate.
-//Together could be fan and heater, so you could run just one of them or on heater pin is just heater.
-//#define COOLER_SEPARE 1
-// Data wire is plugged into port 2 on the Arduino
-#define HEATER_PIN 2 //D2
-#define FAN_PIN 3 //D3
-//Pin for oneWire.
-#define ONE_WIRE_BUS 4 //D4
-//Update interval
-#define SLEEP_INTERVAL 1000
 
-#define LED_PIN 13 //Currently builtin LED
-//Watchdog number of tries, after that signal malfunction
-#define WATCHDOG_TRIES 60 //180 * sleep interval seconds
-
-
-#define ERROR_FLASH_DELAY 300
-#define HEATER_FAIL_FLASHES 2
-#define COOLER_FAIL_FLASHES 3
-//LED flashes 10 times, when reading of the temperature failed. 
-#define TEMP_READ_FAIL_FLASHES 10
-
-//Target temperature in degrees Celsius
-float TARGET_TEMP = 26.0f;
-//Temperature deviation in degrees Celsius, when fan or heater are not adjusting internal temperature
-float TEMP_DEV = 2.0f;
 //Current temperature
 float current_temp = 0.0f;
 
@@ -68,6 +43,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 cha
 
 const char * TEMP_ERR_STR = "TEMP_ERROR: Failed!!";
 
+//Dallas
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
 
@@ -75,17 +51,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // arrays to hold device address
-DeviceAddress insideThermometer;
+//DeviceAddress insideThermometer;
 
-// function to print a device address
-void printAddress(DeviceAddress deviceAddress)
-{
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    if (deviceAddress[i] < 16) Serial.print("0");
-    Serial.print(deviceAddress[i], HEX);
-  }
-}
 
 /*
 Flashes error 
@@ -109,9 +76,23 @@ void sleep_time(long delay_ms){
 }
 
 
-uint8_t readTemp(DeviceAddress deviceAddress){
+uint8_t readTempAddr(DeviceAddress deviceAddress){
   float tmp = current_temp;
   current_temp = sensors.getTempC(deviceAddress);
+  if(current_temp == DEVICE_DISCONNECTED_C) 
+  {
+    Serial.println("TEMP_ERROR: Could not read temperature data");
+    temp_read_failed = true;
+    return 1;
+  }
+  prev_temp = tmp;
+  temp_read_failed = false;
+  return 0;
+}
+
+uint8_t readTempIdx(uint8_t deviceIndex){
+  float tmp = current_temp;
+  current_temp = sensors.getTempCByIndex(deviceIndex);
   if(current_temp == DEVICE_DISCONNECTED_C) 
   {
     Serial.println("TEMP_ERROR: Could not read temperature data");
@@ -247,19 +228,19 @@ void setup(void)
   if (sensors.isParasitePowerMode()) Serial.println("ON");
   else Serial.println("OFF");
   
-  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  //if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
 
   // show the addresses we found on the bus
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  Serial.println();
+  //Serial.print("Device 0 Address: ");
+  //printAddress(insideThermometer);
+  // Serial.println();
 
   // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
-  sensors.setResolution(insideThermometer, 9);
+  //sensors.setResolution(insideThermometer, 9);
  
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC); 
-  Serial.println();
+  // Serial.print("Device 0 Resolution: ");
+  // Serial.print(sensors.getResolution(insideThermometer), DEC); 
+  // Serial.println();
 
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
@@ -284,7 +265,7 @@ void loop(void)
   sensors.requestTemperatures(); // Send the command to get temperatures
   Serial.println("DONE");
   //reading DS temp temperature
-  if(readTemp(insideThermometer) == 0){
+  if(readTempIdx(0) == 0){
     Serial.print("TEMP: ");
     Serial.print(current_temp);
     Serial.println("C");
