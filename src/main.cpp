@@ -66,7 +66,9 @@ bool fan_on = false;
 bool fan_cycle_on = false;
 uint8_t fan_cycle_cnt = 0;
 
+//On number of cycles
 uint8_t fan_cycle_on_cnt = 2;
+//Off number of cycles
 uint8_t fan_cycle_off_cnt = 8;
 
 #ifdef DISPLAY_I2C
@@ -130,6 +132,10 @@ uint8_t readTemp(DeviceAddress deviceAddress){
   return 0;
 }
 
+/**
+ * @brief Cycling on and off heater with relay, time based would be a bit overkill for now. - just 4B extra
+ * PWM would be possible, but not with relay;
+ */
 void fan_cycle_heater(){
   if(fan_cycle_on){
     if(fan_cycle_cnt < fan_cycle_on_cnt){
