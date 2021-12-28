@@ -62,6 +62,13 @@ bool temp_read_failed = false;
 bool heater_on = false;
 bool fan_on = false;
 
+//Fan cycle
+bool fan_cycle_on = false;
+uint8_t fan_cycle_cnt = 0;
+
+uint8_t fan_cycle_on_cnt = 2;
+uint8_t fan_cycle_off_cnt = 8;
+
 #ifdef DISPLAY_I2C
 LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 #endif
@@ -123,6 +130,31 @@ uint8_t readTemp(DeviceAddress deviceAddress){
   return 0;
 }
 
+void fan_cycle_heater(){
+  if(fan_cycle_on){
+    if(fan_cycle_cnt < fan_cycle_on_cnt){
+      fan_cycle_cnt++;
+    }
+    else{
+      //Change to off
+      fan_cycle_cnt = 0;
+      fan_cycle_on = false;
+      digitalWrite(FAN_PIN, false);
+    }
+  }
+  else{
+    if(fan_cycle_cnt < fan_cycle_off_cnt){
+      fan_cycle_cnt++;
+    }
+    else{
+      //Change to on
+      fan_cycle_on = true;
+      fan_cycle_cnt = 0;
+      digitalWrite(FAN_PIN, true);
+    }
+  }
+}
+
 void stall_temp(){
   if(!fan_on && !heater_on){
     Serial.println("STALE_TEMP: STATE_UNCHANGED");
@@ -147,7 +179,8 @@ void turn_heater_on(){
       fan_on = false;
       Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=OFF");
     #else
-      digitalWrite(FAN_PIN, true);
+      //Running cycled fan heater
+      fan_cycle_heater();
       fan_on = true;
       Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=ON");
     #endif
@@ -291,9 +324,12 @@ void loop(void)
     
     #ifdef DISPLAY_I2C
       lcd.setCursor(0,0);
-      lcd.print("TEMP ");
-      char outstr[4];
-      dtostrf(current_temp, 4, 1, outstr);
+      lcd.print("T: ");
+      char outstr[3];
+      dtostrf(current_temp, 3, 1, outstr);
+      lcd.print(outstr);
+      lcd.print("C => ");
+      dtostrf(TARGET_TEMP, 3, 1, outstr);
       lcd.print(outstr);
       lcd.print("C");
     #endif
