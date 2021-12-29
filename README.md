@@ -12,3 +12,19 @@ Code is inside src/main.cpp
 ```
 pio run -e nanoatmega328 -t upload
 ``` 
+
+## Monitor
+
+```
+pio run -e nanoatmega328 -t monitor
+```
+
+## Complete run from cli
+
+```
+pio run -e nanoatmega328 -t upload
+pio run -e nanoatmega328 -t monitor
+```
+
+## Releases
+Compiled binaries are placed in builds/ directory.
