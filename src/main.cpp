@@ -188,11 +188,6 @@ void turn_heater_on(){
       digitalWrite(FAN_PIN, false);
       //fan_on = false;
       Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=OFF");
-    #else
-      //Running cycled fan heater
-      fan_cycle_heater();
-      //fan_on = true;
-      Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=ON");
     #endif
     digitalWrite(HEATER_PIN, true);
     heater_on = true;
@@ -200,7 +195,6 @@ void turn_heater_on(){
       lcd.setCursor(0,1);
       lcd.print("HEATING!!");
     #endif
-    return;
   }
   Serial.println("HEATER_ON: STATE_UNCHANGED");
 }
@@ -374,6 +368,16 @@ void loop(void)
     #endif
     flash_error(LED_PIN, TEMP_READ_FAIL_FLASHES);
   }
+
+  //Fan cycling in case of heater
+  #ifndef COOLER_SEPARE
+  if(heater_on){
+    //Running cycled fan heater
+    fan_cycle_heater();
+    Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=ON");
+  }
+  #endif
+
   
   temp_watchdog();
   #ifdef DISPLAY_I2C
