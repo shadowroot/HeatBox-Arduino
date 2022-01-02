@@ -60,7 +60,7 @@ int prev_counts = WATCHDOG_TRIES;
 
 bool temp_read_failed = false;
 bool heater_on = false;
-bool fan_on = false;
+bool cooler_on = false;
 
 //Fan cycle
 bool fan_cycle_on = true;
@@ -166,7 +166,7 @@ void fan_cycle_heater(){
 }
 
 void stall_temp(){
-  if(!fan_on && !heater_on){
+  if(!cooler_on && !heater_on){
     Serial.println("STALE_TEMP: STATE_UNCHANGED");
     return;
   }
@@ -174,7 +174,7 @@ void stall_temp(){
   digitalWrite(FAN_PIN, false);
 
   heater_on = false;
-  fan_on = false;
+  cooler_on = false;
   Serial.println("STALE_TEMP: FAN=OFF, HEATER=OFF");
   #ifdef DISPLAY_I2C
     lcd.setCursor(0,1);
@@ -186,12 +186,12 @@ void turn_heater_on(){
   if(!heater_on){
     #ifdef COOLER_SEPARE
       digitalWrite(FAN_PIN, false);
-      fan_on = false;
+      //fan_on = false;
       Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=OFF");
     #else
       //Running cycled fan heater
       fan_cycle_heater();
-      fan_on = true;
+      //fan_on = true;
       Serial.println("HEATER_TURN_ON: HEATER=ON, FAN=ON");
     #endif
     digitalWrite(HEATER_PIN, true);
@@ -208,12 +208,12 @@ void turn_heater_on(){
  * Turn fan on
  */
 void turn_cooler_on(){
-  if(!fan_on){
+  if(!cooler_on){
     digitalWrite(HEATER_PIN, false);
     digitalWrite(FAN_PIN, true);
 
     heater_on = false;
-    fan_on = true;
+    cooler_on = true;
     Serial.println("FAN_TURN_ON: FAN=ON, HEATER=OFF");
     #ifdef DISPLAY_I2C
       lcd.setCursor(0,1);
@@ -221,7 +221,7 @@ void turn_cooler_on(){
     #endif
     return;
   }
-  Serial.println("FAN_ON: STATE_UNCHANGED");
+  Serial.println("COOLER_ON: STATE_UNCHANGED");
 }
 
 
@@ -281,28 +281,28 @@ void setup(void)
   // locate devices on the bus
   Serial.print("Locating devices...");
   sensors.begin();
-  Serial.print("Found ");
-  Serial.print(sensors.getDeviceCount(), DEC);
-  Serial.println(" devices.");
+  // Serial.print("Found ");
+  // Serial.print(sensors.getDeviceCount(), DEC);
+  // Serial.println(" devices.");
 
-  // report parasite power requirements
-  Serial.print("Parasite power is: "); 
-  if (sensors.isParasitePowerMode()) Serial.println("ON");
-  else Serial.println("OFF");
+  // // report parasite power requirements
+  // Serial.print("Parasite power is: "); 
+  // if (sensors.isParasitePowerMode()) Serial.println("ON");
+  // else Serial.println("OFF");
   
-  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  // if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
 
-  // show the addresses we found on the bus
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  Serial.println();
+  // // show the addresses we found on the bus
+  // Serial.print("Device 0 Address: ");
+  // printAddress(insideThermometer);
+  // Serial.println();
 
   // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
-  sensors.setResolution(insideThermometer, 9);
+  // sensors.setResolution(insideThermometer, 9);
  
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC); 
-  Serial.println();
+  // Serial.print("Device 0 Resolution: ");
+  // Serial.print(sensors.getResolution(insideThermometer), DEC); 
+  // Serial.println();
 
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
