@@ -63,13 +63,13 @@ bool heater_on = false;
 bool fan_on = false;
 
 //Fan cycle
-bool fan_cycle_on = false;
+bool fan_cycle_on = true;
 uint8_t fan_cycle_cnt = 0;
 
 //On number of cycles
-uint8_t fan_cycle_on_cnt = 2;
+uint8_t fan_cycle_on_cnt = 1;
 //Off number of cycles
-uint8_t fan_cycle_off_cnt = 8;
+uint8_t fan_cycle_off_cnt = 2;
 
 #ifdef DISPLAY_I2C
 LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -140,23 +140,27 @@ void fan_cycle_heater(){
   if(fan_cycle_on){
     if(fan_cycle_cnt < fan_cycle_on_cnt){
       fan_cycle_cnt++;
+      Serial.println("FAN_CYCLE CYCLING ON");
     }
     else{
       //Change to off
       fan_cycle_cnt = 0;
       fan_cycle_on = false;
       digitalWrite(FAN_PIN, false);
+      Serial.println("FAN_CYCLE TURNED OFF");
     }
   }
   else{
     if(fan_cycle_cnt < fan_cycle_off_cnt){
       fan_cycle_cnt++;
+      Serial.println("FAN_CYCLE CYCLING OFF");
     }
     else{
       //Change to on
       fan_cycle_on = true;
       fan_cycle_cnt = 0;
       digitalWrite(FAN_PIN, true);
+      Serial.println("FAN_CYCLE TURNED ON");
     }
   }
 }
