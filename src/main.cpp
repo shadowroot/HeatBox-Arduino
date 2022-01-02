@@ -69,7 +69,7 @@ uint8_t fan_cycle_cnt = 0;
 //On number of cycles
 uint8_t fan_cycle_on_cnt = 1;
 //Off number of cycles
-uint8_t fan_cycle_off_cnt = 2;
+uint8_t fan_cycle_off_cnt = 4;
 
 #ifdef DISPLAY_I2C
 LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
