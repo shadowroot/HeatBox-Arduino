@@ -273,30 +273,30 @@ void setup(void)
   Serial.begin(9600);
 
   // locate devices on the bus
-  //Serial.print("Locating devices...");
+  Serial.print("Locating devices...");
   sensors.begin();
-  // Serial.print("Found ");
-  // Serial.print(sensors.getDeviceCount(), DEC);
-  // Serial.println(" devices.");
+  Serial.print("Found ");
+  Serial.print(sensors.getDeviceCount(), DEC);
+  Serial.println(" devices.");
 
   // // report parasite power requirements
-  // Serial.print("Parasite power is: "); 
-  // if (sensors.isParasitePowerMode()) Serial.println("ON");
-  // else Serial.println("OFF");
+  Serial.print("Parasite power is: "); 
+  if (sensors.isParasitePowerMode()) Serial.println("ON");
+  else Serial.println("OFF");
   
   if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
 
   // // show the addresses we found on the bus
-  // Serial.print("Device 0 Address: ");
-  // printAddress(insideThermometer);
-  // Serial.println();
+  Serial.print("Device 0 Address: ");
+  printAddress(insideThermometer);
+  Serial.println();
 
   // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
   sensors.setResolution(insideThermometer, 9);
  
-  // Serial.print("Device 0 Resolution: ");
-  // Serial.print(sensors.getResolution(insideThermometer), DEC); 
-  // Serial.println();
+  Serial.print("Device 0 Resolution: ");
+  Serial.print(sensors.getResolution(insideThermometer), DEC); 
+  Serial.println();
 
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEATER_PIN, OUTPUT);
