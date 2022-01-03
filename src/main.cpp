@@ -273,7 +273,7 @@ void setup(void)
   Serial.begin(9600);
 
   // locate devices on the bus
-  Serial.print("Locating devices...");
+  //Serial.print("Locating devices...");
   sensors.begin();
   // Serial.print("Found ");
   // Serial.print(sensors.getDeviceCount(), DEC);
