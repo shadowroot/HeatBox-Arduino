@@ -75,7 +75,7 @@ uint8_t fan_cycle_off_cnt = 4;
 LiquidCrystal_I2C lcd(0x27, 20, 4);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 #endif
 
-const char * TEMP_ERR_STR = "TEMP_ERROR: Failed!!";
+const char * TEMP_ERR_STR = "TEMP_R_ERR: Fix sensor!!";
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
@@ -284,7 +284,7 @@ void setup(void)
   // if (sensors.isParasitePowerMode()) Serial.println("ON");
   // else Serial.println("OFF");
   
-  // if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
+  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0"); 
 
   // // show the addresses we found on the bus
   // Serial.print("Device 0 Address: ");
@@ -292,7 +292,7 @@ void setup(void)
   // Serial.println();
 
   // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
-  // sensors.setResolution(insideThermometer, 9);
+  sensors.setResolution(insideThermometer, 9);
  
   // Serial.print("Device 0 Resolution: ");
   // Serial.print(sensors.getResolution(insideThermometer), DEC); 
